@@ -3092,6 +3092,14 @@ function renderTop(w, h) {
 // Screen-space tail shared by every camera: letterbox GOAL ceremony,
 // scoreboard, rally and match-point chips, vignette, menu dim.
 function renderTail(w, h) {
+  // Explicit view-space setup: renderTop leaves the letterbox transform on
+  // the stack, but render25 calls us in raw screen pixels. Normalize here
+  // so CX/CY/VW/VH are always correct (this was dropping the scoreboard
+  // off-screen on narrow viewports in 2.5D).
+  const dpr = view.dpr || 1;
+  ctx.save();
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.translate(view.ox, view.oy); ctx.scale(view.s, view.s);
   // letterbox + GOAL! - the reserved channel (stable screen space, above the zoom).
   // Under reduced motion the banner arrives without the spring (bars fade in
   // instead of sliding, GOAL! appears at rest size).
@@ -3153,6 +3161,7 @@ function renderTail(w, h) {
     ctx.fillStyle = 'rgba(0,0,0,0.38)';
     ctx.fillRect(0, 0, VW, VH);
   }
+  ctx.restore();
 }
 
 // ---------- 2.5D view ----------
@@ -3361,8 +3370,8 @@ function drawObjects25(cam) {
   for (const it of items) it.f();
 }
 
-const PUCK_H25 = 20;   // puck thickness in rink units
-const HANDLE_H25 = 110; // mallet handle height in rink units
+const PUCK_H25 = 12;   // puck thickness in rink units
+const HANDLE_H25 = 55; // mallet handle height in rink units
 
 // The puck as a short cylinder: dark wall, theme-dressed top, spin cue.
 function drawPuck25(cam) {
@@ -3441,10 +3450,10 @@ function drawMallet25(cam, m) {
   ctx.lineTo(b.x + w0, b.y); ctx.lineTo(b.x - w0, b.y);
   ctx.closePath(); ctx.fill();
   // knob
-  const kg = ctx.createRadialGradient(t.x - w1 * 0.3, t.y - w1 * 0.3, 1, t.x, t.y, w1 * 1.3);
+  const kg = ctx.createRadialGradient(t.x - w1 * 0.4, t.y - w1 * 0.4, 1, t.x, t.y, w1 * 1.9);
   kg.addColorStop(0, '#8a6544'); kg.addColorStop(1, '#4a3220');
   ctx.fillStyle = kg;
-  ctx.beginPath(); ctx.ellipse(t.x, t.y, w1 * 1.3, w1 * 1.15, 0, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(t.x, t.y, w1 * 1.9, w1 * 1.7, 0, 0, TAU); ctx.fill();
 }
 
 // Table-bound dynamics in the 2.5D view: everything drawTableFlat draws
