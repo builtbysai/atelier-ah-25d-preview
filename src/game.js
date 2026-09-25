@@ -1250,7 +1250,7 @@ function resize() {
 // for free. Pure functions of (preset, w, h, flip) - unit-testable.
 const CAM_PRESETS = {
   elevated: { c: [-650, CY, 720], look: [760, CY, 0] },
-  surface: { c: [-60, CY, 170], look: [950, CY, 0] },
+  surface: { c: [-200, CY, 350], look: [800, CY, 0] },
 };
 const TX1 = TX0 + PW + RAIL * 2, TY1 = TY0 + PH + RAIL * 2; // table footprint
 function v3sub(a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }
@@ -3103,8 +3103,8 @@ function renderTail(w, h) {
     ctx.fillRect(0, 0, VW, bh); ctx.fillRect(0, VH - bh, VW, bh);
     ctx.globalAlpha = clamp((G.letterT - 0.25) * 2.4, 0, 1);
     const zp = PRM.reduce ? 1 : easeOutBack(clamp((G.letterT - 0.2) * 1.6, 0, 1));
-    ctx.translate(CX, CY); ctx.scale(zp, zp);
-    ctx.font = '800 92px ' + THEME.font.display;
+    ctx.translate(CX, CY - 140); ctx.scale(zp, zp);
+    ctx.font = '800 76px ' + THEME.font.display;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillStyle = THEME.gold || '#d8a93f';
     ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 30;
@@ -3238,7 +3238,7 @@ function warpRect25(g, cam, src, ox, oy, x0, x1, y0, y1) {
   let guard = 0;
   while (stack.length && guard++ < 20000) {
     const [a, b] = stack.pop();
-    if (b - a < 0.5 || triErr25(cam, a, b, y0, y1) < 0.5) bounds.push(b);
+    if (b - a < 4.0 || triErr25(cam, a, b, y0, y1) < 3.0) bounds.push(b);
     else { const m = (a + b) / 2; stack.push([m, b]); stack.push([a, m]); }
   }
   bounds.sort((p, q) => p - q);
@@ -3624,7 +3624,9 @@ function drawFx25(cam) {
     const gr = ctx.createRadialGradient(e.x, e.y, e.rx * 0.05, e.x, e.y, e.rx);
     gr.addColorStop(0, color); gr.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = gr;
-    ctx.fillRect(e.x - e.rx, e.y - e.ry, e.rx * 2, e.ry * 2);
+    ctx.beginPath();
+    ctx.ellipse(e.x, e.y, e.rx, e.ry, 0, 0, TAU);
+    ctx.fill();
     ctx.restore();
   };
   if (G.flashA > 0) {
@@ -3644,11 +3646,11 @@ function drawCountdown25(cam) {
   const frac = (G.countT % 0.55) / 0.55;
   const label = G.countT < 1.65 ? String(3 - Math.floor(G.countT / 0.55)) : 'GO!';
   const pop = 1 + (1 - frac) * 0.55;
-  const p = camProject(cam, CX, CY - 40, 120);
+  const p = camProject(cam, CX, CY, 0);
   if (!p) return;
   ctx.save();
   ctx.globalAlpha = clamp(1.4 - frac, 0, 1);
-  ctx.font = '800 ' + (120 * p.s * pop).toFixed(1) + 'px ' + THEME.font.display;
+  ctx.font = '800 ' + (170 * p.s * pop).toFixed(1) + 'px ' + THEME.font.display;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillStyle = THEME.ink;
   ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 24;
